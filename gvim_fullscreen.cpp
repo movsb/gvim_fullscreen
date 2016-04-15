@@ -38,18 +38,17 @@ extern "C" __declspec(dllexport) int __cdecl ToggleFullscreen(int alpha) {
             SetWindowLongPtr(hWnd, GWL_STYLE, WS_POPUP | WS_VISIBLE);
             SetClassLongPtr(hWnd, GCL_HBRBACKGROUND, (LONG)GetStockObject(BLACK_BRUSH));
 
-            SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), SWP_FRAMECHANGED);
+            SetWindowPos(hWnd, HWND_TOP, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), SWP_FRAMECHANGED);
             SetLayeredWindowAttributes(hWnd, 0, (BYTE)(alpha <= 0 ? 30 : alpha), LWA_ALPHA);
 
             SetPropA(hWnd, "__full_state__", HANDLE(1));
             break;
         case 1:
-            r = reinterpret_cast<RECT*>(GetPropA(hWnd, "__window_rect__"));
-
             SetWindowLongPtr(hWnd, GWL_STYLE, WS_OVERLAPPEDWINDOW | WS_VISIBLE);
             SetClassLongPtr(hWnd, GCL_HBRBACKGROUND, (LONG)COLOR_BTNFACE);
 
-            SetWindowPos(hWnd, HWND_NOTOPMOST, r->left, r->top, r->right-r->left, r->bottom-r->top, SWP_FRAMECHANGED);
+            r = reinterpret_cast<RECT*>(GetPropA(hWnd, "__window_rect__"));
+            SetWindowPos(hWnd, HWND_TOP, r->left, r->top, r->right-r->left, r->bottom-r->top, SWP_FRAMECHANGED);
             SetLayeredWindowAttributes(hWnd, 0, 255, LWA_ALPHA);
 
             SetPropA(hWnd, "__full_state__", HANDLE(0));
