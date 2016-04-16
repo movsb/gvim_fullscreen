@@ -30,6 +30,13 @@ extern "C" __declspec(dllexport) int __cdecl ToggleFullscreen(int alpha) {
             if(!(r = reinterpret_cast<RECT*>(GetPropA(hWnd, "__window_rect__")))) {
                 r = (RECT*)HeapAlloc(GetProcessHeap(), 0, sizeof(RECT));
                 SetWindowLongPtr(hWnd, GWL_EXSTYLE, GetWindowLongPtr(hWnd, GWL_EXSTYLE) | WS_EX_LAYERED);
+
+                // remove clientedge for vim textarea
+                HWND hTextArea = FindWindowEx(hWnd, NULL, "VimTextArea", "Vim text area");
+                if(hTextArea) {
+                    DWORD dwExStyle = GetWindowLongPtr(hTextArea, GWL_EXSTYLE);
+                    SetWindowLongPtr(hTextArea, GWL_EXSTYLE, dwExStyle & ~WS_EX_CLIENTEDGE);
+                }
             }
 
             GetWindowRect(hWnd, r);
