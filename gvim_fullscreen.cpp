@@ -4,6 +4,8 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
+#include <cstdio>
+
 BOOL CALLBACK EnumThreadWndProc(HWND hwnd, LPARAM lParam) {
     char ClassName[128];
     ClassName[GetClassNameA(hwnd, &ClassName[0], sizeof(ClassName)/sizeof(*ClassName))] = '\0';
@@ -17,7 +19,32 @@ BOOL CALLBACK EnumThreadWndProc(HWND hwnd, LPARAM lParam) {
     }
 }
 
-extern "C" __declspec(dllexport) int __cdecl ToggleFullscreen(int alpha) {
+extern "C" __declspec(dllexport) int __cdecl ToggleTransparency(const char* args) {
+    HWND hWnd = NULL;
+    if(EnumThreadWindows(GetCurrentThreadId(), EnumThreadWndProc, LPARAM(&hWnd)))
+        hWnd = NULL;
+    if(hWnd != NULL) {
+        int newval = 0;
+        int t1, t2;
+        if(sscanf(args, "%d,%d", &t1, &t2) == 2) {
+            int current = reinterpret_cast<int>(GetPropA(hWnd, "__transparency__"));
+            if (current == 0)
+                SetWindowLongPtr(hWnd, GWL_EXSTYLE, GetWindowLongPtr(hWnd, GWL_EXSTYLE) | WS_EX_LAYERED);
+
+            if (current == 0 || current == t2)
+                newval = t1;
+            else
+                newval = t2;
+
+            SetLayeredWindowAttributes(hWnd, 0, (BYTE)newval, LWA_ALPHA);
+            SetPropA(hWnd, "__transparency__", HANDLE(newval));
+        }
+    }
+
+    return 0;
+}
+
+extern "C" __declspec(dllexport) int __cdecl ToggleFullscreen(int) {
     HWND hWnd = NULL;
     if(EnumThreadWindows(GetCurrentThreadId(), EnumThreadWndProc, LPARAM(&hWnd)))
         hWnd = NULL;
@@ -29,7 +56,6 @@ extern "C" __declspec(dllexport) int __cdecl ToggleFullscreen(int alpha) {
         case 0:
             if(!(r = reinterpret_cast<RECT*>(GetPropA(hWnd, "__window_rect__")))) {
                 r = (RECT*)HeapAlloc(GetProcessHeap(), 0, sizeof(RECT));
-                SetWindowLongPtr(hWnd, GWL_EXSTYLE, GetWindowLongPtr(hWnd, GWL_EXSTYLE) | WS_EX_LAYERED);
 
                 // remove clientedge for vim textarea
                 HWND hTextArea = FindWindowEx(hWnd, NULL, "VimTextArea", "Vim text area");
@@ -46,7 +72,6 @@ extern "C" __declspec(dllexport) int __cdecl ToggleFullscreen(int alpha) {
             SetClassLongPtr(hWnd, GCL_HBRBACKGROUND, (LONG)GetStockObject(BLACK_BRUSH));
 
             SetWindowPos(hWnd, HWND_TOP, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), SWP_FRAMECHANGED);
-            SetLayeredWindowAttributes(hWnd, 0, (BYTE)(alpha <= 0 ? 30 : alpha), LWA_ALPHA);
 
             SetPropA(hWnd, "__full_state__", HANDLE(1));
             break;
@@ -56,7 +81,6 @@ extern "C" __declspec(dllexport) int __cdecl ToggleFullscreen(int alpha) {
 
             r = reinterpret_cast<RECT*>(GetPropA(hWnd, "__window_rect__"));
             SetWindowPos(hWnd, HWND_TOP, r->left, r->top, r->right-r->left, r->bottom-r->top, SWP_FRAMECHANGED);
-            SetLayeredWindowAttributes(hWnd, 0, 255, LWA_ALPHA);
 
             SetPropA(hWnd, "__full_state__", HANDLE(0));
             break;
