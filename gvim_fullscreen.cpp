@@ -6,7 +6,7 @@
 
 #include <cstdio>
 
-BOOL CALLBACK EnumThreadWndProc(HWND hwnd, LPARAM lParam) {
+static BOOL CALLBACK EnumThreadWndProc(HWND hwnd, LPARAM lParam) {
     char ClassName[128];
     ClassName[GetClassNameA(hwnd, &ClassName[0], sizeof(ClassName)/sizeof(*ClassName))] = '\0';
     if(strcmp(ClassName, "Vim") == 0) {
@@ -59,10 +59,8 @@ extern "C" __declspec(dllexport) int __cdecl ToggleFullscreen(int) {
 
                 // remove clientedge for vim textarea
                 HWND hTextArea = FindWindowEx(hWnd, NULL, "VimTextArea", "Vim text area");
-                if(hTextArea) {
-                    DWORD dwExStyle = GetWindowLongPtr(hTextArea, GWL_EXSTYLE);
-                    SetWindowLongPtr(hTextArea, GWL_EXSTYLE, dwExStyle & ~WS_EX_CLIENTEDGE);
-                }
+                DWORD dwExStyle = GetWindowLongPtr(hTextArea, GWL_EXSTYLE);
+                SetWindowLongPtr(hTextArea, GWL_EXSTYLE, dwExStyle & ~WS_EX_CLIENTEDGE);
             }
 
             GetWindowRect(hWnd, r);
@@ -89,3 +87,4 @@ extern "C" __declspec(dllexport) int __cdecl ToggleFullscreen(int) {
 
     return 0;
 }
+
