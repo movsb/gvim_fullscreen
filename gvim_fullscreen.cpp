@@ -44,12 +44,22 @@ extern "C" __declspec(dllexport) int __cdecl ToggleTransparency(const char* args
     return 0;
 }
 
+static BOOL CALLBACK EnumMonitor(HMONITOR handle, HDC hdc, LPRECT rect, LPARAM param)
+{
+    MONITORINFO *pmi = reinterpret_cast<MONITORINFO*>(param);
+    GetMonitorInfo(handle, pmi);
+    return true;
+}
+
 extern "C" __declspec(dllexport) int __cdecl ToggleFullscreen(int) {
     HWND hWnd = NULL;
     if(EnumThreadWindows(GetCurrentThreadId(), EnumThreadWndProc, LPARAM(&hWnd)))
         hWnd = NULL;
     if(hWnd != NULL) {
         RECT* r;
+        MONITORINFO mi;
+        mi.cbSize = sizeof(mi);
+        MONITORINFO *pmi = &mi;
         // 0: non full-screen, 1: full-screen
         switch(reinterpret_cast<int>(GetPropA(hWnd, "__full_state__")))
         {
@@ -69,7 +79,8 @@ extern "C" __declspec(dllexport) int __cdecl ToggleFullscreen(int) {
             SetWindowLongPtr(hWnd, GWL_STYLE, WS_POPUP | WS_VISIBLE);
             SetClassLongPtr(hWnd, GCL_HBRBACKGROUND, (LONG)GetStockObject(BLACK_BRUSH));
 
-            SetWindowPos(hWnd, HWND_TOP, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), SWP_FRAMECHANGED);
+            EnumDisplayMonitors(NULL, r, EnumMonitor, reinterpret_cast<LPARAM>(pmi));
+            SetWindowPos(hWnd, HWND_TOP, pmi->rcMonitor.left, pmi->rcMonitor.top, pmi->rcMonitor.right - pmi->rcMonitor.left, pmi->rcMonitor.bottom - pmi->rcMonitor.top, SWP_FRAMECHANGED);
 
             SetPropA(hWnd, "__full_state__", HANDLE(1));
             break;
