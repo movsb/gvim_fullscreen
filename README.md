@@ -34,3 +34,11 @@ You can get all `guioptions` here: <https://vimhelp.org/options.txt.html#%27guio
 ## How to compile
 
 Open *Visual Studio Command Prompt*, `cd` into *gvim_fullscrren* and then type `nmake`, you will get `gvim_fullscreen.dll`.
+
+**Please Note:** If you're using 64-bit version of GVim, please open **Visual Studio Command Prompt for x64**.
+
+## Precompiled binaries
+
+Please navigate to [Release Page](https://github.com/movsb/gvim_fullscreen/releases).
+
+I find it somewhat hard for me to use GitHub Actions to automatically create builds. Contributions are welcome!
